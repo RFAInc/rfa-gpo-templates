@@ -31,13 +31,13 @@ function Import-CustomGPO {
             Write-Host "Imported `"$($import_result.DisplayName)`" to `"$($import_result.DomainName)`"."
         }
         catch [UnauthorizedAccessException]{
-            Write-Host "Insufficient access, cannot create GPO."
+            Write-Host "Insufficient access, cannot create GPO `"$GPOName`"."
         }
         catch {
-            Write-Output "GPO import failed for backup $BackupName."
+            Write-Output "GPO import failed for backup `"$BackupName`"."
         }
     } else {
-        Write-Host "GPO $GPOName already exists."
+        Write-Host "GPO `"$GPOName`" already exists."
     }
     # links gpo to domain
     try {
@@ -45,10 +45,10 @@ function Import-CustomGPO {
         Write-Host "Linked `"$($link_result.DisplayName)`" to `"$($link_result.Target)`"."
     }
     catch [System.ArgumentException] {
-        Write-Host "GPO does not exist or its already linked to $LinkPath."
+        Write-Host "GPO `"$GPOName`" does not exist or its already linked to $LinkPath."
     }
     catch {
-        Write-Host "Link apply failed for GPO $GPOName to the path $LinkPath. Please ensure it gets applied manually."
+        Write-Host "Link apply failed for GPO `"$GPOName`" to the path `"$LinkPath`". Please ensure it gets applied manually."
     }
     # applies security filtering
     try {
@@ -56,10 +56,10 @@ function Import-CustomGPO {
         Write-Host "Filtered `"$($filtering_result.DisplayName)`" to `"$FilterGroup`"."
     }
     catch [System.ArgumentException] {
-        Write-Host "GPO does not exist."
+        Write-Host "GPO `"$GPOName`" does not exist."
     }
     catch {
-        Write-Host "Filter apply failed for GPO $GPOName to the group $FilterGroup. Please ensure it gets applied manually."
+        Write-Host "Filter apply failed for GPO `"$GPOName`" to the group `"$FilterGroup`". Please ensure it gets applied manually."
     }
 }
 function New-CustomGPO {
