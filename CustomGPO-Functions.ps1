@@ -25,37 +25,41 @@ function Import-CustomGPO {
         [String]$FilterGroup
     )
     # creates new gpo using template 
-    try {
-        $import_result = Import-GPO -BackupGPOName $BackupName -TargetName $GPOName -Path $BackupPath -CreateIfNeeded -ErrorAction "Stop"
-        Write-Host "Imported `"$($import_result.DisplayName)`" to `"$($import_result.DomainName)`""
-        # links new gpo to domain
+    if(!($null = Get-GPO -Name $GPOName -ErrorAction SilentlyContinue)) {
         try {
-            $link_result = New-GPLink -Name $GPOName -Target $LinkPath -ErrorAction "Stop"
-            Write-Host "Linked `"$($link_result.DisplayName)`" to `"$($link_result.Target)`""
+            $import_result = Import-GPO -BackupGPOName $BackupName -TargetName $GPOName -Path $BackupPath -CreateIfNeeded -ErrorAction "Stop"
+            Write-Host "Imported `"$($import_result.DisplayName)`" to `"$($import_result.DomainName)`""
         }
-        catch [System.ArgumentException] {
-            Write-Host "GPO does not exist or its already linked"
+        catch [UnauthorizedAccessException]{
+            Write-Host "Insufficient access, cannot create GPO"
         }
         catch {
-            Write-Host "Link apply failed for GPO $GPOName to the path $LinkPath. Please ensure it gets applied manually."
+            Write-Output "GPO import failed for backup $BackupName."
         }
-        # applies security filtering
-        try {
-            $filtering_result = Set-GPPermission -Name $GPOName -TargetName $FilterGroup -TargetType "Group" -PermissionLevel "GpoApply" -ErrorAction "Stop"
-            Write-Host "Filtered `"$($filtering_result.DisplayName)`" to `"$FilterGroup`""
-        }
-        catch [System.ArgumentException] {
-            Write-Host "GPO does not exist"
-        }
-        catch {
-            Write-Host "Filter apply failed for GPO $GPOName to the group $FilterGroup. Please ensure it gets applied manually."
-        }
+    } else {
+        Write-Host "GPO $GPOName already exists"
     }
-    catch [UnauthorizedAccessException]{
-        Write-Host "Insufficient access, cannot create GPO"
+    # links gpo to domain
+    try {
+        $link_result = New-GPLink -Name $GPOName -Target $LinkPath -ErrorAction "Stop"
+        Write-Host "Linked `"$($link_result.DisplayName)`" to `"$($link_result.Target)`""
+    }
+    catch [System.ArgumentException] {
+        Write-Host "GPO does not exist or its already linked to $LinkPath"
     }
     catch {
-        Write-Output "GPO import failed for backup $BackupName."
+        Write-Host "Link apply failed for GPO $GPOName to the path $LinkPath. Please ensure it gets applied manually."
+    }
+    # applies security filtering
+    try {
+        $filtering_result = Set-GPPermission -Name $GPOName -TargetName $FilterGroup -TargetType "Group" -PermissionLevel "GpoApply" -ErrorAction "Stop"
+        Write-Host "Filtered `"$($filtering_result.DisplayName)`" to `"$FilterGroup`""
+    }
+    catch [System.ArgumentException] {
+        Write-Host "GPO does not exist or is already filtered to $FilterGroup"
+    }
+    catch {
+        Write-Host "Filter apply failed for GPO $GPOName to the group $FilterGroup. Please ensure it gets applied manually."
     }
 }
 function New-CustomGPO {
