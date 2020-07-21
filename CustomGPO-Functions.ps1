@@ -11,16 +11,12 @@ function Import-CustomGPO {
     param (
         [Parameter(Mandatory=$true)]
         [String]$BackupName,
-
         [Parameter(Mandatory=$true)]
         [String]$BackupPath,
-        
         [Parameter(Mandatory=$true)]
         [String]$GPOName,
-        
         [Parameter(Mandatory=$false)]
         [String]$LinkPath = (Get-AdDomain).DistinguishedName,
-        
         [Parameter(Mandatory=$true)]
         [String]$FilterGroup
     )
